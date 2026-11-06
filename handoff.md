@@ -1,6 +1,6 @@
 # real-estate-client — Handoff
 **Session note:** [[Claude Chats/2026-11-05 — PUTSOMESPECONIT Landing Page for Noah Salvador]]
-**Last updated:** 2026-11-05
+**Last updated:** 2026-11-06
 
 ## What Was Done
 - Built the whole site from scratch at `03 Projects/SWE Projects/real-estate-client/site/`. No build step, no npm, deployable as a folder.
@@ -24,6 +24,21 @@ Working end to end and verified in a browser at 375px, 1280px and 1440px: scroll
 - **The demo roster is invented and says so**, with real Unsplash photographers credited in the footer. No testimonials, logos, customer counts, ratings or press anywhere — none exist.
 - **The dashboard's unbuilt sections say "not in this demo"** instead of pretending.
 - Built with a three-agent workflow (asset verification → dashboard + landing sections in parallel) against a written contract; the three.js scene and all choreography were written by hand.
+
+## Session 2 — 2026-11-06
+- Renamed the product **Porchlight → PUTSOMESPECONIT** (Noah's PSN handle).
+  All 54 references swapped; mid-sentence uses were rewritten rather than
+  replaced so the copy is not shouting inside paragraphs. Wordmark retypeset
+  as a tracked all-caps logotype in the UI face — the display serif could not
+  hold 15 capitals in a 375px header. Footer carries the *put some spec on it*
+  line so the joke lands.
+- Vault folder renamed `Porchlight Landing` → `real-estate-client`; all
+  wikilinks and `.claude/launch.json` updated.
+- Pushed to https://github.com/carami21/real-estate-client (public) and deployed to GitHub Pages at https://carami21.github.io/real-estate-client/ via
+  `.github/workflows/pages.yml`. `netlify.toml` is committed too, so Netlify
+  or Cloudflare Pages is a one-click move if Pages ever gets in the way.
+- Verified the rebrand at 375px, 1111px and 1400px: no header collision, no
+  horizontal scroll, no console errors, zero leftover "Porchlight".
 
 ## Blockers
 - **Contact form posts nowhere.** `action="#"`. Needs a Formspree / Basin / Netlify endpoint from Noah before launch.

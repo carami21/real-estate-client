@@ -1,6 +1,8 @@
 # real-estate-client — Project Context
 
-**Status:** Built and working locally. Not in git, not deployed, client has not seen it.
+**Status:** Live on GitHub Pages. Client has not seen it yet.
+**Live:** https://carami21.github.io/real-estate-client/
+**Repo:** https://github.com/carami21/real-estate-client (public)
 **Handoff:** [[03 Projects/SWE Projects/real-estate-client/handoff]]
 **Started:** 2026-11-05
 
@@ -55,12 +57,28 @@ In `js/house.js`:
 
 In `js/app.js`: `STAGES` holds the seven caption blocks.
 
-## Before launch
+## The name
+
+**PUTSOMESPECONIT** is Noah's PSN handle, used as the product name so the site
+introduces itself to him in his own gamertag. It also reads *put some spec on
+it*, and "spec" is already real-estate vocabulary (a spec home), so the pun
+works on the product too. The footer says it out loud under the wordmark.
+
+Set as a tracked-out all-caps logotype in `--sans`, **not** the Fraunces
+display serif the headings use — 15 capitals in a serif will not survive a
+375px header. If you change the name, the four places are `.hdr__markWord`,
+`.ftr__mark`, `.loader__mark` and `.pl-rail__name`.
+
+Avoid dropping the name mid-sentence in body copy; it shouts. The existing
+prose says "it", "the desk" or "this" in those positions on purpose.
+
+## Before Noah signs off
 
 1. Point `#contact-form` at a real endpoint (Formspree / Basin / Netlify).
 2. Real photo of Noah.
 3. Decide whether to keep the demo listings or use his own.
-4. `git init`, push, deploy `site/`.
+4. Confirm he's happy the repo is public — `gh repo edit --visibility private`
+   flips it (Pages then needs a paid plan, so move to Netlify if so).
 
 ## Links
 

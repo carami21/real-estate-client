@@ -19,8 +19,24 @@ not load from `file://`.
 
 ## Deploy
 
-The `site/` folder *is* the deployable artifact. Drag it into Netlify, point
-Vercel at it, or push it to GitHub Pages. Nothing to compile, nothing to install.
+**Live:** https://carami21.github.io/real-estate-client/
+**Repo:** https://github.com/carami21/real-estate-client
+
+Deployed with **GitHub Pages**, driven by `.github/workflows/pages.yml`: every
+push to `main` uploads `site/` and publishes it. Nothing to compile, nothing to
+install, no third-party account. Pages is set to *Source: GitHub Actions* —
+don't switch it back to "Deploy from a branch" or the workflow stops mattering.
+
+If you'd rather move it:
+
+| Host | What to set |
+|---|---|
+| Netlify | nothing — `netlify.toml` already sets publish dir to `site` |
+| Cloudflare Pages | build command empty, output directory `site` |
+| Vercel | framework "Other", output directory `site` |
+
+A custom domain (`putsomespeconit.com`, say) works on any of them. On Pages:
+add it under Settings → Pages, then point a CNAME at `carami21.github.io`.
 
 ## Files
 

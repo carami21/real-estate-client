@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PUTSOMESPECONIT — the operations desk for a residential brokerage</title>
+<meta name="description" content="PUTSOMESPECONIT is the dashboard Noah Salvador runs his residential real-estate practice on: listings, review queue, commission and payouts in one place. Scroll to build the house, then open the front door." />
+<meta name="theme-color" content="#05040d" />
+<meta property="og:title" content="PUTSOMESPECONIT — the operations desk for a residential brokerage" />
+<meta property="og:description" content="Scroll to build the house. Press the door to open the demo workspace." />
+<meta property="og:type" content="website" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://api.iconify.design" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet" />
+
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/stage.css" />
+<link rel="stylesheet" href="css/landing.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+
+<!--
+  PUTSOMESPECONIT — built for Noah Salvador. The name is his PSN handle; it also
+  happens to read "put some spec on it", which is the right joke for a
+  product about listing detail.
+  Stack: three.js 0.169 (the house), GSAP 3.12 + ScrollTrigger (choreography),
+  Lenis 1.1 (the one and only smooth-scroll engine). No build step: every
+  dependency is a pinned ES module from jsDelivr.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+    "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js",
+    "gsap/ScrollTrigger": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger.js",
+    "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.mjs"
+  }
+}
+</script>
+</head>
+
+<body>
+<a class="u-skip" href="#product">Skip to content</a>
+
+<!-- ============================ the scene ============================ -->
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<!-- Static first frame. Visible until WebGL paints, and permanently when
+     WebGL is unavailable or the visitor asked for reduced motion. -->
+<div id="poster" class="poster" aria-hidden="true">
+  <div class="poster__sky"></div>
+  <div class="poster__glow"></div>
+</div>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<!-- ============================ loader ============================== -->
+<div id="loader" class="loader" role="status" aria-live="polite">
+  <div class="loader__inner">
+    <p class="loader__mark">PUTSOMESPECONIT</p>
+    <p class="loader__line"><span id="loader-pct">0</span>% — drawing the plans</p>
+    <div class="loader__bar"><i id="loader-bar"></i></div>
+  </div>
+</div>
+
+<!-- ============================ header ============================== -->
+<!-- injected: partials/sections.html § A -->
+<div data-slot="header">
+<!-- ======================================================================
+     § A — site header
+     ====================================================================== -->
+<header class="hdr" id="site-header">
+  <div class="hdr__bar">
+
+    <a class="hdr__mark" href="#main">
+      <span class="hdr__markIcon" aria-hidden="true"
+            style="--icn: url('https://api.iconify.design/solar/home-smile-bold-duotone.svg')"></span>
+      <span class="hdr__markWord">PUTSOMESPECONIT</span>
+    </a>
+
+    <nav class="hdr__nav" aria-label="Sections of this page">
+      <ul class="hdr__list">
+        <li><a href="#product">What it does</a></li>
+        <li><a href="#workflow">A day on it</a></li>
+        <li><a href="#numbers">Numbers</a></li>
+        <li><a href="#faq">Questions</a></li>
+      </ul>
+    </nav>
+
+    <div class="hdr__right">
+      <button class="btn btn--primary btn--sm hdr__cta"
+              id="nav-open-dash"
+              type="button"
+              data-open-dash>
+        Open the demo
+      </button>
+
+      <button class="hdr__burger"
+              id="menu-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="menu-panel"
+              aria-label="Open the menu">
+        <span class="hdr__burgerIcon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/hamburger-menu-bold-duotone.svg')"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile disclosure. Hidden by attribute so the lead's JS can toggle it;
+       the <noscript> block at the end of § H un-hides it when scripting is
+       off, so the links are never unreachable. -->
+  <div class="hdr__panel" id="menu-panel" hidden>
+    <ul class="hdr__panelList">
+      <li><a href="#product">What it does</a></li>
+      <li><a href="#workflow">A day on it</a></li>
+      <li><a href="#numbers">Numbers</a></li>
+      <li><a href="#faq">Questions</a></li>
+      <li><a href="#contact">Get in touch</a></li>
+    </ul>
+    <button class="btn btn--primary hdr__panelCta" type="button" data-open-dash>
+      Open the demo workspace
+    </button>
+  </div>
+</header>
+<!-- /§ A -->
+</div>
+
+<main id="main">
+
+  <!-- ====================== act one: the build ====================== -->
+  <section id="build" class="build" aria-labelledby="hero-title">
+    <div class="build__fixed">
+
+      <div class="hero" id="hero">
+        <p class="eyebrow">PUTSOMESPECONIT · for Noah Salvador</p>
+        <h1 class="hero__title split" id="hero-title" data-split>
+          Every listing, lit.
+        </h1>
+        <p class="hero__lede">
+          One desk for the whole practice — the review queue, the commission
+          ledger, the deals that have gone quiet.
+          <span class="hero__lede--motion">Scroll, and the house goes up. When
+          the lights come on, open the front door.</span><span
+          class="hero__lede--static">Open the demo workspace and have a look
+          around it.</span>
+        </p>
+        <div class="hero__actions">
+          <button class="btn btn--primary" type="button" data-open-dash>
+            Open the demo workspace
+          </button>
+          <a class="btn btn--ghost" href="#product">What it does</a>
+        </div>
+        <p class="hero__note">Opens a sample Arizona workspace. Nothing is saved.</p>
+      </div>
+
+      <!-- Scrubbed caption track. One <p> swapped per stage; announced once
+           per change rather than on every scroll tick. -->
+      <aside class="stage" id="stage" aria-live="polite" aria-atomic="true">
+        <p class="stage__num" id="stage-num">01</p>
+        <h2 class="stage__title" id="stage-title">Survey</h2>
+        <p class="stage__body" id="stage-body">
+          Corners staked, setbacks checked, the footprint strung out on bare dirt.
+        </p>
+      </aside>
+
+      <!-- The door. A real button, focusable and operable from the keyboard,
+           parked over the doorway in screen space. -->
+      <button
+        class="doorbtn"
+        id="door-btn"
+        type="button"
+        hidden
+        data-open-dash
+        aria-describedby="door-hint">
+        <span class="doorbtn__ring" aria-hidden="true"></span>
+        <span class="doorbtn__label">Open the door</span>
+      </button>
+      <p class="doorhint" id="door-hint" hidden>Press the door to step inside</p>
+
+      <!-- Build progress rail -->
+      <div class="rail" id="rail" aria-hidden="true">
+        <ol class="rail__ticks">
+          <li>Survey</li><li>Foundation</li><li>Frame</li>
+          <li>Dry&nbsp;in</li><li>Skin</li><li>Porch</li><li>Lights&nbsp;on</li>
+        </ol>
+        <div class="rail__track"><i id="rail-fill"></i></div>
+      </div>
+
+      <p class="scrollcue" id="scrollcue" aria-hidden="true">
+        <span>Scroll</span><i></i>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== acts two onward ========================== -->
+  <!-- injected: partials/sections.html § B–G -->
+  <!-- ======================================================================
+     § B — #product
+     ====================================================================== -->
+<section class="sec sec--product" id="product" aria-labelledby="product-title">
+  <div class="shell">
+
+    <div class="sec__head" data-reveal>
+      <p class="eyebrow">What it does</p>
+      <h2 class="sec__title split" id="product-title" data-split>
+        Six jobs that currently live in your inbox.
+      </h2>
+      <p class="sec__lede">
+        PUTSOMESPECONIT is one desk for a residential practice: the listings waiting
+        on a decision, the deals that have gone quiet, and the money owed at the
+        end of the month. It is built for a team of two to forty, not for an
+        enterprise rollout.
+      </p>
+    </div>
+
+    <!-- Deliberately uneven: one tall feature, one wide pair, three small.
+         The grid is defined in landing.css; the markup only names the roles. -->
+    <div class="bento">
+
+      <article class="cap cap--feature" data-reveal>
+        <span class="cap__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/clipboard-check-bold-duotone.svg')"></span>
+        <h3 class="cap__title">A listing cannot go live broken</h3>
+        <p class="cap__body">
+          Every listing runs a checklist before it publishes: photo count,
+          disclosures attached, square footage matched against the county
+          record, a seller signature on page three. When something fails,
+          it names the check by name instead of saying "incomplete".
+        </p>
+        <ul class="cap__examples">
+          <li>
+            <span class="cap__bullet" aria-hidden="true"
+                  style="--icn: url('https://api.iconify.design/solar/danger-triangle-bold-duotone.svg')"></span>
+            Only 6 photos — 8 required
+          </li>
+          <li>
+            <span class="cap__bullet" aria-hidden="true"
+                  style="--icn: url('https://api.iconify.design/solar/danger-triangle-bold-duotone.svg')"></span>
+            Square footage conflicts with county record
+          </li>
+          <li>
+            <span class="cap__bullet" aria-hidden="true"
+                  style="--icn: url('https://api.iconify.design/solar/danger-triangle-bold-duotone.svg')"></span>
+            Missing lead-based paint disclosure
+          </li>
+        </ul>
+        <p class="cap__foot">
+          The three above are real checks from the demo queue.
+        </p>
+      </article>
+
+      <article class="cap cap--wide" data-reveal="0.05">
+        <span class="cap__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/clock-circle-bold-duotone.svg')"></span>
+        <h3 class="cap__title">Chase a stale listing before it goes cold</h3>
+        <p class="cap__body">
+          The queue sorts worst-first by days sitting, so the fourteen-day-old
+          townhouse with four photos and a blank lease term is the first thing
+          you see, not something you find in a quarterly review. Average days on
+          market is on the same screen, next to last quarter's.
+        </p>
+      </article>
+
+      <article class="cap" data-reveal="0.05">
+        <span class="cap__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/wallet-money-bold-duotone.svg')"></span>
+        <h3 class="cap__title">Commission maths you can hand to an agent</h3>
+        <p class="cap__body">
+          Each agent's split is stored once, so a payout run shows gross, split
+          and net per person without a spreadsheet rebuild. A payout can be held
+          with a reason attached rather than quietly skipped.
+        </p>
+      </article>
+
+      <article class="cap" data-reveal="0.1">
+        <span class="cap__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/calendar-mark-bold-duotone.svg')"></span>
+        <h3 class="cap__title">Showings counted, not guessed at</h3>
+        <p class="cap__body">
+          Showings booked this week roll up per listing and per agent, so you
+          can tell a seller their house was shown eleven times and point at the
+          dates. Quiet listings sort straight to the top.
+        </p>
+      </article>
+
+      <article class="cap" data-reveal="0.15">
+        <span class="cap__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/document-text-bold-duotone.svg')"></span>
+        <h3 class="cap__title">Documents live on the listing</h3>
+        <p class="cap__body">
+          Purchase contract, disclosures and floor plan hang off the listing
+          record, not off whoever last emailed them. Open a property and the
+          paperwork is the second tab.
+        </p>
+      </article>
+
+      <article class="cap cap--roster" data-reveal="0.2">
+        <span class="cap__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/users-group-rounded-bold-duotone.svg')"></span>
+        <h3 class="cap__title">One roster, four offices</h3>
+        <p class="cap__body">
+          Listing agent, buyer's agent, transaction coordinator and compliance
+          reviewer each see the same record with their own queue on top of it.
+          Share of active inventory by office is a chart, not a phone call.
+        </p>
+      </article>
+
+    </div>
+  </div>
+</section>
+<!-- /§ B -->
+
+
+<!-- ======================================================================
+     § C — #workflow
+     Asymmetric: a sticky editorial column on the left, the timeline on the
+     right. #workflow-line is drawn at full height in CSS so the section is
+     finished-looking if GSAP never runs.
+     ====================================================================== -->
+<section class="sec sec--workflow" id="workflow" aria-labelledby="workflow-title">
+  <div class="shell flow">
+
+    <div class="flow__aside">
+      <div class="flow__asideInner" data-reveal>
+        <p class="eyebrow">A day on PUTSOMESPECONIT</p>
+        <h2 class="sec__title split" id="workflow-title" data-split>
+          Thursday, from the first coffee to the last payout.
+        </h2>
+        <p class="sec__lede sec__lede--narrow">
+          Nothing below is a notification you have to go looking for. The four
+          moments are the four times in a normal day that the software actually
+          changed what happened next.
+        </p>
+
+        <figure class="flow__figure">
+          <!-- Unsplash photo-1657346088167-b982455bf29a by George Barros — unsplash.com/photos/modern-house-with-white-walls-t4FMbSdmeR0 -->
+          <img
+            src="https://images.unsplash.com/photo-1657346088167-b982455bf29a?w=960&amp;q=72&amp;auto=format&amp;h=600&amp;fit=crop&amp;crop=entropy"
+            alt="A three-storey house with white walls and grey siding photographed at dusk"
+            width="960" height="600"
+            loading="lazy" decoding="async"
+            onerror="this.dataset.dead=''" />
+          <figcaption class="flow__caption">
+            PL-2042 — Gilbert. Five days in review, six photos, no floor plan.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="flow__track">
+      <!-- The rail. Decorative: the real sequence is the <ol> beside it. -->
+      <div class="flow__rail" aria-hidden="true">
+        <span class="flow__line" id="workflow-line"></span>
+      </div>
+
+      <ol class="flow__steps">
+      <li class="step" data-reveal>
+        <p class="step__time">7:40am</p>
+        <h3 class="step__title">Nine listings are already sorted</h3>
+        <p class="step__body">
+          The review queue is ordered by what is most likely to cost you the
+          deal: photo counts under eight, disclosures missing, anything sitting
+          longer than a week. You work down it instead of opening twelve tabs
+          to find out where you stand.
+        </p>
+      </li>
+
+      <li class="step" data-reveal>
+        <p class="step__time">11:15am</p>
+        <h3 class="step__title">A price check fires on the Tempe ranch</h3>
+        <p class="step__body">
+          The list price came in eighteen per cent under comparable sales.
+          PUTSOMESPECONIT flagged it with the comp set attached, so the conversation
+          with the seller happened this morning — not after an appraisal came
+          back and the whole thing had to be re-papered.
+        </p>
+      </li>
+
+      <li class="step" data-reveal>
+        <p class="step__time">2:30pm</p>
+        <h3 class="step__title">Escrow opens and the file assembles itself</h3>
+        <p class="step__body">
+          The coordinator marks the Gilbert sale open. Contract, disclosures and
+          the signed addendum are already on the listing, so the escrow packet
+          is a download rather than an afternoon of forwarding attachments.
+        </p>
+      </li>
+
+      <li class="step" data-reveal>
+        <p class="step__time">6:05pm</p>
+        <h3 class="step__title">October payouts, one screen</h3>
+        <p class="step__body">
+          Gross, split and net per agent, with one payout held because a
+          commission demand has not come back from title. The hold carries its
+          reason, so nobody has to ask twice why their number is different this
+          month.
+        </p>
+      </li>
+      </ol>
+    </div>
+  </div>
+</section>
+<!-- /§ C -->
+
+
+<!-- ======================================================================
+     § D — #numbers
+     Demo-workspace figures, labelled as such in visible copy.
+     ====================================================================== -->
+<section class="sec sec--numbers" id="numbers" aria-labelledby="numbers-title">
+  <div class="shell">
+
+    <div class="sec__head sec__head--center" data-reveal>
+      <p class="eyebrow">The demo workspace</p>
+      <h2 class="sec__title split" id="numbers-title" data-split>
+        What the sample brokerage looks like inside.
+      </h2>
+      <p class="sec__lede sec__lede--center">
+        These four figures come from the demo workspace that opens when you
+        press the door — a made-up Arizona brokerage with ten listings and six
+        people on the roster. They are sample data, not a customer result, and
+        PUTSOMESPECONIT makes no claim about either.
+      </p>
+    </div>
+
+    <dl class="figs" data-reveal-group>
+      <div class="fig">
+        <dt class="fig__label">Gross volume, year to date</dt>
+        <dd class="fig__body">
+          <span class="fig__value">$18.4<span class="fig__unit">M</span></span>
+          <span class="fig__sub">Closed sales across four offices</span>
+        </dd>
+      </div>
+      <div class="fig">
+        <dt class="fig__label">Active listings</dt>
+        <dd class="fig__body">
+          <span class="fig__value">142</span>
+          <span class="fig__sub">Nine of them waiting on a decision</span>
+        </dd>
+      </div>
+      <div class="fig">
+        <dt class="fig__label">Average days on market</dt>
+        <dd class="fig__body">
+          <span class="fig__value">27<span class="fig__unit">d</span></span>
+          <span class="fig__sub">Down from 34 the quarter before</span>
+        </dd>
+      </div>
+      <div class="fig">
+        <dt class="fig__label">List-to-close rate</dt>
+        <dd class="fig__body">
+          <span class="fig__value">68.5<span class="fig__unit">%</span></span>
+          <span class="fig__sub">Of listings the sample team took on</span>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="figs__note" data-reveal>
+      <span class="figs__noteIcon" aria-hidden="true"
+            style="--icn: url('https://api.iconify.design/solar/shield-check-bold-duotone.svg')"></span>
+      Demo workspace. Listings, agents and figures on this page are sample data.
+    </p>
+  </div>
+</section>
+<!-- /§ D -->
+
+
+<!-- ======================================================================
+     § E — "see it yourself" band
+     ====================================================================== -->
+<section class="band" aria-labelledby="band-title">
+  <div class="shell band__grid">
+
+    <div class="band__copy" data-reveal>
+      <p class="eyebrow">See it yourself</p>
+      <h2 class="band__title split" id="band-title" data-split>
+        The door is the demo.
+      </h2>
+      <p class="band__body">
+        Press it and the house opens into the workspace: the review queue, the
+        commission ledger, the activity feed, all wired to the sample data.
+        Click around as hard as you like.
+      </p>
+      <button class="btn btn--primary btn--lg" type="button" data-open-dash>
+        <span class="btn__icon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/login-3-bold-duotone.svg')"></span>
+        Open the demo workspace
+      </button>
+      <p class="band__note">
+        Opens the demo workspace with sample Arizona listings. Nothing is saved.
+      </p>
+    </div>
+
+    <figure class="band__figure" data-reveal="0.1">
+      <!-- Unsplash photo-1791320851270-113a07519bbc by James McDonnell — unsplash.com/photos/orange-door-on-white-house-I9dTL82fiQs -->
+      <img
+        src="https://images.unsplash.com/photo-1791320851270-113a07519bbc?w=960&amp;q=72&amp;auto=format&amp;h=600&amp;fit=crop&amp;crop=entropy"
+        alt="A bright orange front door on a white house with palm trees and gravel landscaping"
+        width="960" height="600"
+        loading="lazy" decoding="async"
+        onerror="this.dataset.dead=''" />
+    </figure>
+  </div>
+</section>
+<!-- /§ E -->
+
+
+<!-- ======================================================================
+     § F — #faq
+     ====================================================================== -->
+<section class="sec sec--faq" id="faq" aria-labelledby="faq-title">
+  <div class="shell faq">
+
+    <div class="faq__head" data-reveal>
+      <p class="eyebrow">Questions</p>
+      <h2 class="sec__title split" id="faq-title" data-split>
+        The five things people ask first.
+      </h2>
+    </div>
+
+    <div class="faq__list">
+
+      <details class="qa" data-reveal>
+        <summary class="qa__q">
+          <span class="qa__text">We have four years of deals in spreadsheets. What happens to them?</span>
+          <span class="qa__mark" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/alt-arrow-down-bold-duotone.svg')"></span>
+        </summary>
+        <div class="qa__a">
+          <p>
+            They get imported, column by column, with you in the room. Listings,
+            agents, splits and closed volume map onto its own records;
+            anything that does not map cleanly stays in a notes field rather
+            than being silently dropped. Expect to spend an afternoon on it, not
+            a quarter — and keep the spreadsheets afterwards, because nothing
+            here deletes your originals.
+          </p>
+        </div>
+      </details>
+
+      <details class="qa" data-reveal>
+        <summary class="qa__q">
+          <span class="qa__text">Does it talk to the MLS, or to my IDX feed?</span>
+          <span class="qa__mark" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/alt-arrow-down-bold-duotone.svg')"></span>
+        </summary>
+        <div class="qa__a">
+          <p>
+            Not yet, and that is worth being straight about. PUTSOMESPECONIT is the
+            desk you work from before a listing is fit to publish — the
+            checklist, the documents, the money. MLS and IDX connections are
+            per-board, contractual, and different in every market, so they are a
+            build for your board rather than a switch to flip. Ask in the form
+            below and you will get an honest answer about your board, not a
+            roadmap promise.
+          </p>
+        </div>
+      </details>
+
+      <details class="qa" data-reveal>
+        <summary class="qa__q">
+          <span class="qa__text">My agents live in Excel. Do they have to stop?</span>
+          <span class="qa__mark" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/alt-arrow-down-bold-duotone.svg')"></span>
+        </summary>
+        <div class="qa__a">
+          <p>
+            No. Every table on the desk exports, so an agent who wants to
+            model their own split in Excel still can. What changes is which copy
+            is the real one: the brokerage's numbers stop living in whichever
+            file was emailed last, and start living in one record everybody
+            reads from.
+          </p>
+        </div>
+      </details>
+
+      <details class="qa" data-reveal>
+        <summary class="qa__q">
+          <span class="qa__text">What does it cost?</span>
+          <span class="qa__mark" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/alt-arrow-down-bold-duotone.svg')"></span>
+        </summary>
+        <div class="qa__a">
+          <p>
+            There is no price list on this page, because there is no price list
+            yet. PUTSOMESPECONIT was built for one brokerage and is being fitted to
+            others one at a time, and what it costs depends on how many agents
+            you have and how much of your old data needs moving. Tell Noah the
+            size of your team in the form below and he will quote the work
+            rather than publish a number he would have to walk back.
+          </p>
+        </div>
+      </details>
+
+      <details class="qa" data-reveal>
+        <summary class="qa__q">
+          <span class="qa__text">Who actually built this?</span>
+          <span class="qa__mark" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/alt-arrow-down-bold-duotone.svg')"></span>
+        </summary>
+        <div class="qa__a">
+          <p>
+            Noah Salvador, who runs a residential real-estate practice and built
+            the thing to run it on. That is the whole provenance: it is the tool
+            of a working agent rather than a product designed by people who have
+            never had a listing fall out of escrow. The house you scrolled
+            through is three.js; the motion is GSAP; the scrolling is Lenis.
+          </p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+<!-- /§ F -->
+
+
+<!-- ======================================================================
+     § G — #contact — final CTA
+     The form posts NOWHERE by default. Noah: point `action` at your own
+     endpoint and change `method` to "post". Drop-in options that need no
+     server of your own:
+         Formspree  action="https://formspree.io/f/<your-form-id>"
+         Basin      action="https://usebasin.com/f/<your-form-id>"
+         Netlify    add  netlify  as an attribute on the <form>
+     Keep the honeypot field exactly where it is — it is what stops most bots.
+     ====================================================================== -->
+<section class="sec sec--contact" id="contact" aria-labelledby="contact-title">
+  <div class="shell contact">
+
+    <div class="contact__copy" data-reveal>
+      <p class="eyebrow">Get in touch</p>
+      <h2 class="sec__title split" id="contact-title" data-split>
+        Tell Noah about your brokerage.
+      </h2>
+      <p class="sec__lede sec__lede--narrow">
+        How many agents, what you run on now, and the one thing that keeps
+        going wrong. That is enough to say whether this is a fit, and he
+        would rather tell you no quickly than sell you a migration you do not
+        need.
+      </p>
+      <ul class="contact__points">
+        <li>
+          <span class="contact__tick" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/check-circle-bold-duotone.svg')"></span>
+          A real reply from the person who built it
+        </li>
+        <li>
+          <span class="contact__tick" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/check-circle-bold-duotone.svg')"></span>
+          No demo call required to see the product — the door above is the demo
+        </li>
+        <li>
+          <span class="contact__tick" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/check-circle-bold-duotone.svg')"></span>
+          Your data stays yours, and your spreadsheets stay where they are
+        </li>
+      </ul>
+    </div>
+
+    <form class="form" id="contact-form" action="#" method="post" novalidate data-reveal="0.08">
+
+      <div class="field">
+        <label class="field__label" for="cf-name">Your name</label>
+        <input class="field__input"
+               id="cf-name"
+               name="name"
+               type="text"
+               autocomplete="name"
+               required
+               aria-describedby="cf-name-error" />
+        <p class="field__error" id="cf-name-error"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="cf-email">Email</label>
+        <input class="field__input"
+               id="cf-email"
+               name="email"
+               type="email"
+               inputmode="email"
+               autocomplete="email"
+               required
+               aria-describedby="cf-email-hint cf-email-error" />
+        <p class="field__hint" id="cf-email-hint">Used to reply. Nothing else.</p>
+        <p class="field__error" id="cf-email-error"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="cf-size">How many agents?</label>
+        <span class="select">
+          <select class="field__input field__input--select"
+                  id="cf-size"
+                  name="brokerage_size"
+                  required
+                  aria-describedby="cf-size-error">
+            <option value="">Pick one</option>
+            <option value="solo">Just me</option>
+            <option value="2-5">2 to 5</option>
+            <option value="6-15">6 to 15</option>
+            <option value="16-40">16 to 40</option>
+            <option value="40+">More than 40</option>
+          </select>
+          <span class="select__mark" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/alt-arrow-down-bold-duotone.svg')"></span>
+        </span>
+        <p class="field__error" id="cf-size-error"></p>
+      </div>
+
+      <div class="field field--full">
+        <label class="field__label" for="cf-message">What are you running on now?</label>
+        <textarea class="field__input field__input--area"
+                  id="cf-message"
+                  name="message"
+                  rows="5"
+                  required
+                  aria-describedby="cf-message-hint cf-message-error"></textarea>
+        <p class="field__hint" id="cf-message-hint">
+          Spreadsheets, a shared inbox, an MLS portal, something else — and what breaks most often.
+        </p>
+        <p class="field__error" id="cf-message-error"></p>
+      </div>
+
+      <!-- Honeypot. Hidden from sight and from assistive tech on purpose:
+           only a bot fills this in, and the lead's JS drops any submission
+           that does. Do not remove, do not rename. -->
+      <div class="field--pot" aria-hidden="true">
+        <label for="cf-pot">Company website</label>
+        <input id="cf-pot" name="company_website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="form__foot">
+        <button class="btn btn--primary btn--lg" type="submit">
+          Send it
+          <span class="btn__icon" aria-hidden="true"
+                style="--icn: url('https://api.iconify.design/solar/arrow-right-bold-duotone.svg')"></span>
+        </button>
+        <p class="form__status" id="contact-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <p class="form__small">
+        This form is not connected to an endpoint yet, so nothing is sent and
+        nothing is stored.
+      </p>
+    </form>
+  </div>
+</section>
+<!-- /§ G -->
+
+</main>
+
+<!-- injected: partials/sections.html § H -->
+<!-- ======================================================================
+     § H — footer
+     ====================================================================== -->
+<footer class="ftr" id="site-footer">
+  <div class="shell ftr__grid">
+
+    <div class="ftr__brand">
+      <p class="ftr__mark">PUTSOMESPECONIT</p>
+      <p class="ftr__pun">put some spec on it</p>
+      <p class="ftr__line">
+        Built by <strong>Noah Salvador</strong>, who runs a residential
+        real-estate practice. This is the tool he runs it on.
+      </p>
+    </div>
+
+    <nav class="ftr__nav" aria-label="Footer">
+      <h2 class="ftr__h">This page</h2>
+      <ul>
+        <li><a href="#product">What it does</a></li>
+        <li><a href="#workflow">A day on it</a></li>
+        <li><a href="#numbers">Numbers</a></li>
+        <li><a href="#faq">Questions</a></li>
+        <li><a href="#contact">Get in touch</a></li>
+      </ul>
+    </nav>
+
+    <div class="ftr__demo">
+      <h2 class="ftr__h">The demo</h2>
+      <button class="btn btn--ghost btn--sm" type="button" data-open-dash>
+        Open the demo workspace
+      </button>
+      <p class="ftr__note">
+        Sample Arizona listings and an invented roster. Nothing is saved, and
+        none of the figures describe a real brokerage.
+      </p>
+    </div>
+
+    <div class="ftr__credits">
+      <h2 class="ftr__h">
+        <span class="ftr__hIcon" aria-hidden="true"
+              style="--icn: url('https://api.iconify.design/solar/camera-bold-duotone.svg')"></span>
+        Photography
+      </h2>
+      <p class="ftr__note">
+        Every photograph on this site is a licensed Unsplash photo, credited to
+        the photographer who took it.
+      </p>
+      <!-- Filled from CREDITS in js/data.js by the lead's fillPhotoCredits(). -->
+      <ul id="photo-credits" class="credits" data-credits></ul>
+      <noscript>
+        <ul class="credits">
+          <li>Christian Buehner — unsplash.com/photos/a-distinguished-man-in-a-suit-with-graying-hair-jSjhdXDZj_8</li>
+          <li>Christina @ wocintechchat.com — unsplash.com/photos/shallow-focus-photo-of-woman-in-gray-jacket-0Zx1bDv5BNY</li>
+          <li>Ali Morshedlou — unsplash.com/photos/man-wearing-black-notched-lapel-suit-jacket-in-focus-photography-WMD64tMfc4k</li>
+          <li>Michael Guertin — unsplash.com/photos/smiling-woman-in-a-light-grey-suit-by-a-window-6sYpkD6ifu0</li>
+          <li>Humberto Chávez — unsplash.com/photos/a-man-sitting-in-a-chair-with-his-hand-on-his-chin-JsGZQvd_jkQ</li>
+          <li>Phạm Duy Quang — unsplash.com/photos/woman-in-grey-blazer-business-portrait-QGr6H7pri-Q</li>
+          <li>Resource Database — unsplash.com/photos/modern-house-on-rocky-desert-hill-2X-ZzorRydI</li>
+          <li>George Barros — unsplash.com/photos/modern-house-with-white-walls-t4FMbSdmeR0</li>
+          <li>James McDonnell — unsplash.com/photos/orange-door-on-white-house-I9dTL82fiQs</li>
+          <li>Hunter Owens — unsplash.com/photos/mid-century-modern-house-with-desert-plants-and-mountains-9Mt_7Iq5_2Q</li>
+          <li>Gayatri Malhotra — unsplash.com/photos/gray-house-on-green-grass-I9SltHRYlq4</li>
+          <li>Francesco Liotti — unsplash.com/photos/tan-stucco-walls-with-desert-plants-2BQaDnTyIkA</li>
+          <li>Dillon Kydd — unsplash.com/photos/gray-and-white-concrete-house-2keCPb73aQY</li>
+          <li>Cesar Cid — unsplash.com/photos/a-house-with-a-pool-in-front-of-it-EitPmD8YYR4</li>
+          <li>Jeremy Huang — unsplash.com/photos/a-house-on-a-hill-with-a-palm-tree-in-front-of-it-a0A8nXwVHnY</li>
+          <li>Michael Yantis — unsplash.com/photos/brown-and-white-concrete-building-near-brown-mountain-during-daytime-R7E11m121RQ</li>
+        </ul>
+      </noscript>
+    </div>
+  </div>
+
+  <div class="shell ftr__base">
+    <p class="ftr__colophon">
+      Built with three.js for the house, GSAP for the motion and Lenis for the
+      scrolling. Icons are the Solar set via Iconify. No build step: every
+      dependency is a pinned ES module.
+    </p>
+    <p class="ftr__copy">
+      <span aria-hidden="true">©</span> 2026 Noah Salvador. PUTSOMESPECONIT.
+    </p>
+  </div>
+
+  <!-- Scripting off: the mobile menu cannot be toggled, so show it as a plain
+       list and hide the control that would do nothing. Same pattern the shell
+       already uses for the 3D act. -->
+  <noscript>
+    <style>
+      #menu-panel[hidden] { display: block !important; }
+      #menu-toggle { display: none !important; }
+      .hdr { position: static !important; }
+      .hdr__nav { display: block !important; }
+    </style>
+  </noscript>
+</footer>
+<!-- /§ H -->
+
+<!-- ========================== the dashboard ========================= -->
+<div
+  id="dash-layer"
+  class="dashlayer"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label="PUTSOMESPECONIT demo workspace">
+  <div class="dashlayer__door" aria-hidden="true"></div>
+  <button class="dashlayer__close" id="dash-close" type="button">
+    <span aria-hidden="true">&#9587;</span>
+    <span class="u-visually-hidden">Close the demo workspace and go back to the porch</span>
+  </button>
+  <div id="dash-root" class="dashlayer__root"></div>
+</div>
+
+<noscript>
+  <style>
+    /* Mirrors the html.is-static route in css/stage.css: no canvas, so no
+       door to press and no build stages to narrate. The hero's own call to
+       action carries it, and every section below is plain markup already. */
+    #gl, #poster, .grain, .vignette, .loader,
+    .rail, .scrollcue, .doorbtn, .doorhint, .stage { display: none !important; }
+    .hero__lede--motion { display: none !important; }
+    .hero__lede--static { display: inline !important; }
+    .build { height: auto !important; min-height: 92svh; background:
+      radial-gradient(42% 30% at 50% 74%, color-mix(in oklab, var(--amber-400) 26%, transparent) 0%, transparent 72%),
+      linear-gradient(176deg, var(--ink-900) 0%, var(--ink-700) 40%, var(--violet-400) 82%, var(--ink-800) 100%); }
+    .build__fixed { position: static !important; height: auto !important;
+      min-height: 92svh; display: grid; align-content: center; padding-block: 20vh 12vh; }
+    .build__fixed::before { display: none !important; }
+    .hero { position: static !important; width: min(640px, 100%); padding-inline: var(--gutter); }
+  </style>
+  <p class="noscript-note">
+    This page uses JavaScript for a 3D walk-through of the product. Everything
+    below still reads without it, and the demo workspace needs JavaScript to run.
+  </p>
+</noscript>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

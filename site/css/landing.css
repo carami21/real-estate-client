@@ -1,0 +1,1002 @@
+/* =========================================================================
+   landing.css — everything BELOW the 3D act, plus the site header and the
+   footer. The build itself (canvas, loader, hero, stage captions, the door)
+   lives in stage.css and is owned by the lead.
+
+   Rules this file keeps:
+     - Not one raw colour value. Every colour is var(--token) or color-mix()
+       over tokens from css/tokens.css, which is read-only here.
+     - Reveal hooks ([data-reveal], [data-reveal-group], [data-split]) are
+       styled in their FINAL state. GSAP animates FROM a hidden state at
+       runtime, so with no JS, a failed CDN or reduced motion the page is
+       simply finished — never invisible.
+     - Reduced motion block at the bottom jumps to the finished state.
+     - Works at 375px with no horizontal scroll.
+
+   ICONS. Solar glyphs come from the Iconify SVG API and are applied as a CSS
+   mask on a decorative <span>, with the fill taken from a token. The usual
+   <img> route cannot be tinted without baking a hex into the URL, which the
+   contract forbids; a mask keeps the colour in the token system and keeps the
+   duotone's alpha. Icons are decoration beside real text, so they are
+   aria-hidden and the page reads correctly if masks are unsupported.
+   ========================================================================= */
+
+/* =========================================================================
+   1. Shared shell
+   ========================================================================= */
+
+.shell {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.sec {
+  position: relative;
+  z-index: var(--z-page);
+  padding-block: var(--section-y);
+  background: var(--ink-1000);
+  scroll-margin-top: 84px;
+}
+
+/* The first section below the house dissolves out of the scene instead of
+   slamming a flat panel over it. */
+.sec--product {
+  background: linear-gradient(180deg, transparent 0%, var(--ink-1000) 24%);
+  padding-top: calc(var(--section-y) * 1.2);
+}
+
+.sec__head { max-width: 62ch; }
+.sec__head--center { max-width: 70ch; margin-inline: auto; text-align: center; }
+
+.sec__title {
+  margin-top: 16px;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-size: var(--t-2xl);
+  line-height: 0.98;
+  letter-spacing: -0.032em;
+  color: var(--trim-100);
+  text-wrap: balance;
+}
+/* the span the lead's splitHeadings() injects */
+.sec__title .split__inner,
+.band__title .split__inner { display: block; overflow: hidden; padding-bottom: 0.1em; }
+
+.sec__lede {
+  margin-top: 20px;
+  max-width: 56ch;
+  font-size: var(--t-lg);
+  line-height: 1.5;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+.sec__lede--narrow { max-width: 44ch; }
+.sec__lede--center { margin-inline: auto; }
+
+/* --- icon masks ---------------------------------------------------------- */
+
+.hdr__markIcon,
+.hdr__burgerIcon,
+.cap__icon,
+.cap__bullet,
+.figs__noteIcon,
+.btn__icon,
+.qa__mark,
+.select__mark,
+.contact__tick,
+.ftr__hIcon {
+  display: inline-block;
+  flex: none;
+  width: var(--icn-size, 1em);
+  height: var(--icn-size, 1em);
+  background-color: transparent;
+  -webkit-mask-image: var(--icn);
+  mask-image: var(--icn);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+@supports ((mask-image: url("a.svg")) or (-webkit-mask-image: url("a.svg"))) {
+  .hdr__markIcon,
+  .hdr__burgerIcon,
+  .cap__icon,
+  .cap__bullet,
+  .figs__noteIcon,
+  .btn__icon,
+  .qa__mark,
+  .select__mark,
+  .contact__tick,
+  .ftr__hIcon { background-color: var(--icn-tint, currentColor); }
+}
+
+/* --- button sizes layered on stage.css's .btn --------------------------- */
+
+.btn--sm { padding: 9px 16px; font-size: var(--t-xs); }
+.btn--lg { padding: 16px 30px; font-size: var(--t-base); }
+.btn__icon { --icn-size: 1.15em; }
+
+/* =========================================================================
+   2. § A — site header
+   The wrapper the lead injects into is what sticks: a sticky child inside a
+   64px-tall wrapper would not travel. Both are declared so the header pins
+   whether it is injected into the slot or used standalone.
+   ========================================================================= */
+
+[data-slot="header"],
+.hdr {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-chrome);
+}
+.hdr {
+  /* a scrim, not a bar: the first frame of the hero stays visible through it */
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--ink-1000) 93%, transparent) 0%,
+    color-mix(in oklab, var(--ink-1000) 78%, transparent) 58%,
+    transparent 100%
+  );
+}
+html.menu-open .hdr {
+  background: color-mix(in oklab, var(--ink-900) 96%, transparent);
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.hdr__bar {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3vw, 40px);
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  min-height: 64px;
+  padding: 10px var(--gutter);
+}
+
+.hdr__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: auto;
+  color: var(--trim-100);
+  text-decoration: none;
+}
+.hdr__markIcon { --icn-size: 20px; --icn-tint: var(--amber-400); }
+/* The wordmark is a 15-character all-caps handle, so it is set as a
+   logotype in the UI face rather than in the display serif the headings
+   use — tracked out, sized to survive a 375px header. */
+.hdr__markWord {
+  font-family: var(--sans);
+  font-size: clamp(0.70rem, 0.46rem + 1.05vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hdr__list {
+  display: flex;
+  gap: clamp(14px, 2.2vw, 30px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hdr__list a {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease-out);
+}
+.hdr__list a:hover { color: var(--amber-300); }
+
+.hdr__right { display: flex; align-items: center; gap: 10px; }
+
+.hdr__burger {
+  display: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+.hdr__burgerIcon { --icn-size: 22px; }
+.hdr__burger[aria-expanded="true"] { border-color: var(--amber-400); color: var(--amber-300); }
+
+/* class rules outrank the UA's [hidden] { display: none }, so restate it */
+.hdr__panel[hidden] { display: none; }
+.hdr__panel {
+  display: grid;
+  gap: 18px;
+  padding: 6px var(--gutter) 24px;
+  border-bottom: 1px solid var(--hairline-soft);
+  background: color-mix(in oklab, var(--ink-900) 97%, transparent);
+}
+.hdr__panelList {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hdr__panelList a {
+  display: block;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--hairline-soft);
+  font-family: var(--display);
+  font-size: var(--t-lg);
+  color: var(--trim-100);
+  text-decoration: none;
+}
+.hdr__panelList a:hover { color: var(--amber-300); }
+.hdr__panelCta { justify-content: center; }
+
+/* =========================================================================
+   3. § B — #product. Six blocks on an uneven 12-column grid: one tall
+   feature, one wide, two mid, two half. Not a 3-across icon rack.
+   ========================================================================= */
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(14px, 1.4vw, 20px);
+  margin-top: clamp(40px, 6vh, 72px);
+}
+
+.cap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-column: span 6;
+  padding: clamp(20px, 2.4vw, 32px);
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-lg);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--ink-800) 62%, transparent) 0%,
+      color-mix(in oklab, var(--ink-900) 72%, transparent) 100%
+    );
+  transition: border-color var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+}
+.cap:hover { border-color: color-mix(in oklab, var(--amber-400) 34%, transparent); }
+
+.cap__icon {
+  --icn-size: 30px;
+  --icn-tint: var(--amber-400);
+  margin-bottom: 4px;
+}
+.cap__title {
+  font-family: var(--display);
+  font-size: var(--t-lg);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--trim-100);
+  text-wrap: balance;
+}
+.cap__body {
+  max-width: 48ch;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+.cap__foot {
+  margin-top: auto;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.05em;
+  color: var(--fg-faint);
+}
+
+.cap__examples {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cap__examples li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 13px;
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  color: var(--fg);
+}
+.cap__bullet { --icn-size: 15px; --icn-tint: var(--warn); margin-top: 2px; }
+
+/* the uneven rhythm */
+.cap--feature {
+  grid-column: span 5;
+  grid-row: span 2;
+  border-color: color-mix(in oklab, var(--amber-400) 26%, transparent);
+  background:
+    radial-gradient(120% 80% at 8% 0%, color-mix(in oklab, var(--amber-600) 16%, transparent) 0%, transparent 58%),
+    linear-gradient(180deg, color-mix(in oklab, var(--ink-700) 58%, transparent) 0%, color-mix(in oklab, var(--ink-900) 80%, transparent) 100%);
+  box-shadow: var(--lift-1);
+}
+.cap--feature .cap__icon { --icn-size: 38px; }
+.cap--feature .cap__title { font-size: var(--t-xl); line-height: 1.02; }
+.cap--wide { grid-column: span 7; }
+.cap--wide .cap__title { font-size: var(--t-xl); line-height: 1.04; }
+.cap:nth-of-type(3) { grid-column: span 3; }
+.cap:nth-of-type(4) { grid-column: span 4; }
+.cap--roster { grid-column: span 6; }
+
+/* =========================================================================
+   4. § C — #workflow. The page's second layout axis: a sticky editorial
+   column beside a left-railed timeline.
+   ========================================================================= */
+
+.sec--workflow {
+  background:
+    linear-gradient(180deg, var(--ink-1000) 0%, color-mix(in oklab, var(--ink-900) 80%, var(--ink-1000)) 50%, var(--ink-1000) 100%);
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(28px, 5vw, 86px);
+  align-items: start;
+}
+.flow__aside { position: relative; }
+.flow__asideInner { position: sticky; top: 108px; }
+
+.flow__figure {
+  margin: clamp(26px, 4vh, 44px) 0 0;
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--ink-800);
+  box-shadow: var(--lift-1);
+}
+.flow__figure img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  filter: saturate(0.82) brightness(0.84);
+}
+/* Dead URL: the token-coloured box stays, the broken-image icon never shows. */
+.flow__figure img[data-dead],
+.band__figure img[data-dead] { visibility: hidden; }
+.flow__figure img[data-dead] { aspect-ratio: 8 / 5; }
+.flow__caption {
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--hairline-soft);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.03em;
+  color: var(--fg-faint);
+}
+
+/* --rail-pad is the distance from the rail to the step text; the step's
+   pseudo-elements position off it, so one value keeps dot and line aligned. */
+.flow__track {
+  position: relative;
+  --rail-pad: clamp(26px, 3vw, 40px);
+  padding-left: var(--rail-pad);
+}
+
+.flow__rail {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--hairline-soft);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+/* Full height by default: if GSAP never runs the timeline still reads as
+   complete. The lead scrubs scaleY from 0 at runtime. */
+.flow__line {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, var(--amber-300), var(--amber-600));
+  transform: scaleY(1);
+  transform-origin: top center;
+}
+
+.flow__steps {
+  display: grid;
+  gap: clamp(32px, 5vh, 64px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.step {
+  position: relative;
+  counter-increment: step;
+}
+/* the node on the rail */
+.step::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--rail-pad) * -1 + 1px);
+  top: 9px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: var(--amber-400);
+  box-shadow: 0 0 0 4px var(--ink-1000), var(--lamp);
+}
+.step__time {
+  font-family: var(--mono);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber-300);
+}
+/* step number, set ahead of the time rather than on top of the rail */
+.step__time::before {
+  content: counter(step, decimal-leading-zero);
+  margin-right: 10px;
+  color: var(--fg-faint);
+}
+.step__title {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: var(--t-xl);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  color: var(--trim-100);
+  text-wrap: balance;
+}
+.step__body {
+  margin-top: 12px;
+  max-width: 50ch;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+/* =========================================================================
+   5. § D — #numbers
+   ========================================================================= */
+
+.figs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 26px);
+  margin: clamp(40px, 6vh, 74px) 0 0;
+}
+.fig {
+  padding: clamp(20px, 2.2vw, 30px) clamp(18px, 2vw, 26px);
+  border-top: 1px solid color-mix(in oklab, var(--amber-400) 40%, transparent);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ink-800) 56%, transparent) 0%, transparent 86%);
+}
+.fig__label {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.fig__body { margin: 0; }
+.fig__value {
+  display: block;
+  margin-top: 14px;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: var(--t-2xl);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--trim-100);
+}
+.fig__unit {
+  font-size: 0.52em;
+  letter-spacing: 0;
+  color: var(--amber-300);
+}
+.fig__sub {
+  display: block;
+  margin-top: 12px;
+  font-size: var(--t-sm);
+  color: var(--fg-muted);
+}
+
+.figs__note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-top: clamp(26px, 4vh, 42px);
+  padding: 12px 18px;
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-pill);
+  width: fit-content;
+  margin-inline: auto;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  text-align: left;
+}
+.figs__noteIcon { --icn-size: 17px; --icn-tint: var(--ok); }
+
+/* =========================================================================
+   6. § E — the "see it yourself" band. Overlapping axis: the photo slides
+   under the copy card instead of sitting in a tidy column.
+   ========================================================================= */
+
+.band {
+  position: relative;
+  z-index: var(--z-page);
+  padding-block: var(--section-y);
+  background:
+    radial-gradient(86% 70% at 86% 12%, color-mix(in oklab, var(--violet-400) 42%, transparent) 0%, transparent 64%),
+    linear-gradient(180deg, var(--ink-1000) 0%, var(--ink-900) 46%, var(--ink-1000) 100%);
+  overflow: clip;
+}
+.band__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(26px, 4vw, 60px);
+}
+.band__copy {
+  position: relative;
+  z-index: 2;
+  padding: clamp(24px, 3vw, 44px);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  background: color-mix(in oklab, var(--ink-900) 78%, transparent);
+  box-shadow: var(--lift-2);
+}
+.band__title {
+  margin-top: 14px;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: var(--t-2xl);
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  color: var(--trim-100);
+}
+.band__body {
+  margin-top: 18px;
+  max-width: 46ch;
+  font-size: var(--t-lg);
+  line-height: 1.5;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+.band__copy .btn { margin-top: 26px; }
+.band__note {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.04em;
+  color: var(--fg-faint);
+}
+.band__figure {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 0 clamp(-56px, -3vw, 0px);
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background: var(--ink-800);
+  box-shadow: var(--lift-2);
+}
+.band__figure img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: saturate(0.9) brightness(0.9);
+}
+
+/* =========================================================================
+   7. § F — #faq. Wide editorial measure, custom marker, open-state styling.
+   ========================================================================= */
+
+.sec--faq { background: var(--ink-1000); }
+.faq {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(26px, 5vw, 80px);
+  align-items: start;
+}
+.faq__head { position: sticky; top: 108px; }
+.faq__list { display: grid; gap: 12px; }
+
+.qa {
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--r-md);
+  background: color-mix(in oklab, var(--ink-800) 48%, transparent);
+  transition: border-color var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out);
+}
+.qa:hover { border-color: var(--hairline); }
+.qa[open] {
+  border-color: color-mix(in oklab, var(--amber-400) 32%, transparent);
+  background: color-mix(in oklab, var(--ink-700) 44%, transparent);
+}
+
+.qa__q {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: clamp(16px, 1.8vw, 22px);
+  cursor: pointer;
+  list-style: none; /* kills the default triangle in Firefox */
+}
+.qa__q::-webkit-details-marker { display: none; }
+.qa__text {
+  flex: 1 1 auto;
+  font-family: var(--display);
+  font-size: var(--t-lg);
+  font-weight: 500;
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+  color: var(--trim-100);
+  text-wrap: pretty;
+}
+.qa__mark {
+  --icn-size: 22px;
+  --icn-tint: var(--amber-400);
+  margin-top: 2px;
+  transition: transform var(--dur) var(--ease-out);
+}
+.qa[open] .qa__mark { transform: rotate(180deg); }
+.qa__a {
+  padding: 0 clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 24px);
+}
+.qa__a p {
+  max-width: 64ch;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+
+/* =========================================================================
+   8. § G — #contact
+   ========================================================================= */
+
+.sec--contact {
+  background: linear-gradient(180deg, var(--ink-1000) 0%, color-mix(in oklab, var(--ink-800) 60%, var(--ink-1000)) 100%);
+}
+.contact {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(30px, 5vw, 72px);
+  align-items: start;
+}
+.contact__points {
+  display: grid;
+  gap: 12px;
+  margin: clamp(24px, 3vh, 34px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.contact__points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: var(--t-sm);
+  color: var(--fg-muted);
+}
+.contact__tick { --icn-size: 19px; --icn-tint: var(--ok); margin-top: 1px; }
+
+.form {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: clamp(22px, 2.6vw, 38px);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  background: color-mix(in oklab, var(--ink-900) 72%, transparent);
+  box-shadow: var(--lift-1);
+}
+.field { display: grid; gap: 7px; align-content: start; }
+.field--full { grid-column: 1 / -1; }
+
+.field__label {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.field__input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: var(--t-base);
+  transition: border-color var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out);
+}
+.field__input::placeholder { color: var(--fg-faint); }
+.field__input:hover { border-color: color-mix(in oklab, var(--amber-400) 30%, var(--hairline)); }
+.field__input:focus { background: var(--surface-hi); border-color: var(--amber-400); }
+.field__input--area { resize: vertical; min-height: 120px; line-height: 1.5; }
+/* Native select, custom chevron: appearance is stripped so the control takes
+   the same surface as the inputs, and a Solar glyph stands in for the arrow. */
+.select { position: relative; display: block; }
+.field__input--select {
+  appearance: none;
+  padding-right: 44px;
+}
+.field__input--select option { background: var(--ink-800); color: var(--fg); }
+.select__mark {
+  --icn-size: 18px;
+  --icn-tint: var(--amber-400);
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.field__hint {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.03em;
+  color: var(--fg-faint);
+}
+/* Empty until the lead's validator fills it, so it takes no space when valid */
+.field__error {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.03em;
+  color: var(--risk);
+}
+.field__error:empty { display: none; }
+.field__input[aria-invalid="true"] {
+  border-color: var(--risk);
+  background: color-mix(in oklab, var(--risk) 10%, transparent);
+}
+
+/* Honeypot: off-screen for sight, aria-hidden in the markup, still a real
+   focusable input for the bots that fill everything. */
+.field--pot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.form__foot {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.form__status {
+  flex: 1 1 22ch;
+  min-height: 1.2em;
+  font-size: var(--t-sm);
+  color: var(--amber-200);
+}
+.form__small {
+  grid-column: 1 / -1;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.03em;
+  color: var(--fg-faint);
+}
+
+/* =========================================================================
+   9. § H — footer
+   ========================================================================= */
+
+.ftr {
+  position: relative;
+  z-index: var(--z-page);
+  padding-top: clamp(52px, 8vh, 96px);
+  border-top: 1px solid var(--hairline-soft);
+  background: var(--ink-1000);
+}
+.ftr__grid {
+  display: grid;
+  grid-template-columns: 1.3fr 0.8fr 1fr 1.4fr;
+  gap: clamp(26px, 3vw, 52px);
+  padding-bottom: clamp(40px, 6vh, 72px);
+}
+.ftr__mark {
+  font-family: var(--sans);
+  font-size: clamp(0.95rem, 0.62rem + 1.5vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  color: var(--trim-100);
+}
+/* What the handle reads as, which is the whole reason it is a good name
+   for a product about listing detail. */
+.ftr__pun {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  color: var(--amber-300);
+}
+.ftr__line {
+  margin-top: 14px;
+  max-width: 34ch;
+  font-size: var(--t-sm);
+  color: var(--fg-muted);
+}
+.ftr__line strong { color: var(--trim-200); font-weight: 600; }
+
+.ftr__h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.ftr__hIcon { --icn-size: 15px; --icn-tint: var(--amber-400); }
+
+.ftr__nav ul { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.ftr__nav a {
+  font-size: var(--t-sm);
+  color: var(--fg-muted);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease-out);
+}
+.ftr__nav a:hover { color: var(--amber-300); }
+
+.ftr__note {
+  margin-top: 12px;
+  max-width: 36ch;
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--fg-faint);
+}
+
+.credits {
+  display: grid;
+  gap: 5px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: 1.55;
+  color: var(--fg-faint);
+  overflow-wrap: anywhere;
+}
+
+.ftr__base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px;
+  padding-block: 20px 28px;
+  border-top: 1px solid var(--hairline-soft);
+}
+.ftr__colophon {
+  max-width: 68ch;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.03em;
+  color: var(--fg-faint);
+}
+.ftr__copy {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  color: var(--fg-faint);
+}
+
+/* =========================================================================
+   10. Responsive. Mobile is the floor, not an afterthought: nothing below
+   375px may scroll sideways or clip a control.
+   ========================================================================= */
+
+@media (max-width: 1080px) {
+  .ftr__grid { grid-template-columns: 1fr 1fr; }
+  .flow { grid-template-columns: 1fr; }
+  .flow__asideInner { position: static; }
+  .faq { grid-template-columns: 1fr; }
+  .faq__head { position: static; }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* The disclosure belongs to the burger. Past the breakpoint the full nav is
+   back, so the panel is gone whatever state it was left in on a small screen. */
+@media (min-width: 921px) {
+  .hdr__panel,
+  .hdr__panel[hidden] { display: none; }
+}
+
+@media (max-width: 920px) {
+  .hdr__nav { display: none; }
+  .hdr__burger { display: grid; }
+  .bento { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .cap,
+  .cap--feature,
+  .cap--wide,
+  .cap--roster,
+  .cap:nth-of-type(3),
+  .cap:nth-of-type(4) { grid-column: span 6; grid-row: auto; }
+  .contact { grid-template-columns: 1fr; }
+  .band__grid { grid-template-columns: 1fr; }
+  .band__figure { margin-left: 0; order: -1; }
+}
+
+@media (max-width: 640px) {
+  .hdr__cta { display: none; } /* the panel carries the same action */
+  .ftr__grid { grid-template-columns: 1fr; }
+  .figs { grid-template-columns: 1fr; }
+  .form { grid-template-columns: 1fr; padding: 20px; }
+  .band__copy { padding: 22px 20px; }
+  .figs__note { width: auto; border-radius: var(--r-md); }
+  .flow__track { --rail-pad: 22px; }
+  .band__copy .btn,
+  .form__foot .btn { width: 100%; justify-content: center; }
+  .form__status { flex-basis: 100%; }
+}
+
+@media (max-width: 380px) {
+  .hdr__markWord { font-size: var(--t-base); }
+  .cap__examples li { font-size: 10px; }
+}
+
+/* =========================================================================
+   11. Reduced motion — the FINAL state immediately. Not a faster animation,
+   and nothing left running.
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  /* GSAP is not wired on this route, so everything is already final; make
+     sure nothing here can hide content or keep moving. */
+  [data-reveal],
+  [data-reveal-group] > *,
+  [data-split],
+  [data-split] .word {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .cap,
+  .qa,
+  .qa__mark,
+  .field__input,
+  .hdr__list a,
+  .ftr__nav a,
+  .btn { transition: none !important; }
+
+  .flow__line { transform: scaleY(1) !important; }
+
+  /* sticky columns would drag under a pinned header on this route */
+  .flow__asideInner,
+  .faq__head { position: static; }
+}

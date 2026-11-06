@@ -11,7 +11,7 @@ and it opens into the product.
 Any static server works. There is no build step.
 
 ```bash
-cd "03 Projects/SWE Projects/real-estate-client/site" && python3 -m http.server 4610
+cd "~/real-estate-client/site" && python3 -m http.server 4610
 ```
 
 Then open <http://localhost:4610>. It must be served over HTTP — ES modules do

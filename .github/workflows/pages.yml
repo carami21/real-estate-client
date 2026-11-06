@@ -12,9 +12,11 @@ permissions:
   pages: write
   id-token: write
 
+# Queue deployments rather than cancelling them: two overlapping runs
+# (a push and a manual dispatch) would otherwise kill each other.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
